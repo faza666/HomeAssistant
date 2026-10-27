@@ -1,0 +1,50 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+template:
+  - sensor:
+      - name: "PV1 Current Fixed"
+        unique_id: pv1_current_fixed
+        state: "{{ states('sensor.stuff_room_192_168_0_5_pv1_current') }}"
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+
+
+  # One row per month: day/night grid import and cost, captured just before the
+  # monthly utility meters reset. Fire event grid_import_history_snapshot to
+  # snapshot the current month manually (a later snapshot replaces the row).
+  - triggers:
+      - trigger: time
+        at: "23:59:30"
+      - trigger: event
+        event_type: grid_import_history_snapshot
+    conditions:
+      - condition: template
+        value_template: "{{ trigger.platform == 'event' or (now() + timedelta(days=1)).day == 1 }}"
+    sensor:
+      - name: "Grid import monthly history"
+        unique_id: grid_import_monthly_history
+        icon: mdi:table-clock
+        state: "{{ now().strftime('%Y-%m') }}"
+        attributes:
+          months: >
+            {% set month = now().strftime('%Y-%m') %}
+            {% set row = {
+              'month': month,
+              'day': states('sensor.stuff_room_deye_grid_import_day_monthly') | float(0) | round(2),
+              'night': states('sensor.stuff_room_deye_grid_import_night_monthly') | float(0) | round(2),
+              'cost': states('sensor.stuff_room_deye_electricity_cost_month') | float(0) | round(2)
+            } %}
+            {% set old = (this.attributes.get('months') or []) | rejectattr('month', 'eq', month) | list %}
+            {{ ((old + [row]) | sort(attribute='month'))[-36:] }}
+

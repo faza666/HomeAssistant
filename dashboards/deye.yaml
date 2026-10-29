@@ -368,7 +368,7 @@ views:
       - entity: sensor.stuff_room_192_168_0_5_today_load_consumption
         name: Consumption
         color: accent
-      days_to_show: 7
+      days_to_show: 8
       period: day
       chart_type: bar
       stat_types:
@@ -624,32 +624,11 @@ views:
   sections:
   - type: grid
     cards:
-    - type: heading
-      heading: This month
-      heading_style: title
-    - type: tile
-      entity: sensor.stuff_room_deye_grid_import_day_monthly
-      name: Day import
-      icon: mdi:white-balance-sunny
-    - type: tile
-      entity: sensor.stuff_room_deye_grid_import_night_monthly
-      name: Night import
-      icon: mdi:weather-night
-    - type: tile
-      entity: sensor.stuff_room_deye_electricity_cost_month
-      name: Cost
-      icon: mdi:cash
-    - type: tile
-      entity: select.grid_import
-      name: Current tariff
-      icon: mdi:clock-outline
-    - type: heading
-      heading: Prices
-      heading_style: subtitle
     - type: tile
       entity: input_number.electricity_price_day
-      name: Day price
+      name: Денний Тариф
       icon: mdi:white-balance-sunny
+      vertical: false
       tap_action:
         action: none
       hold_action:
@@ -658,10 +637,12 @@ views:
         action: none
       icon_tap_action:
         action: none
+      features_position: bottom
     - type: tile
       entity: input_number.electricity_price_night
-      name: Night price
+      name: Нічний Тариф
       icon: mdi:weather-night
+      vertical: false
       tap_action:
         action: none
       hold_action:
@@ -670,26 +651,27 @@ views:
         action: none
       icon_tap_action:
         action: none
+      features_position: bottom
   - type: grid
     column_span: 2
     cards:
-    - type: heading
-      heading: Monthly history
-      heading_style: title
     - type: markdown
       content: |
+        <sub> Остаточна вартість зберігається в 23:59:30 останнього дня місяця </sub>
+
         {% set cur = now().strftime('%Y-%m') %}
         {% set day = states('sensor.stuff_room_deye_grid_import_day_monthly') | float(0) %}
         {% set night = states('sensor.stuff_room_deye_grid_import_night_monthly') | float(0) %}
         {% set cost = states('sensor.stuff_room_deye_electricity_cost_month') | float(0) %}
         {% set hist = (state_attr('sensor.grid_import_monthly_history', 'months') or [])
            | rejectattr('month', 'eq', cur) | sort(attribute='month', reverse=true) | list %}
-        | Month | Day, kWh | Night, kWh | Total, kWh | Cost, UAH |
+        | Місяць | Денний імпорт, kWh | Нічний імпорт, kWh | Імпортовано за міцяць, kWh | Вартість з урахуванням тарифів, UAH |
         |:--|--:|--:|--:|--:|
-        | **{{ now().strftime('%b %Y') }}** *(so far)* | {{ '%.1f' | format(day) }} | {{ '%.1f' | format(night) }} | {{ '%.1f' | format(day + night) }} | **{{ '%.2f' | format(cost) }}** |
+        | **{{ now().strftime('%b %Y') }}** *(поточний)* | {{ '%.1f' | format(day) }} | {{ '%.1f' | format(night) }} | {{ '%.1f' | format(day + night) }} | **{{ '%.2f' | format(cost) }}** |
         {% for r in hist -%}
         | {{ as_datetime(r.month ~ '-01').strftime('%b %Y') }} | {{ '%.1f' | format(r.day) }} | {{ '%.1f' | format(r.night) }} | {{ '%.1f' | format(r.day + r.night) }} | {{ '%.2f' | format(r.cost) }} |
         {% endfor %}
         {%- if hist %}| **Total** | **{{ '%.1f' | format(hist | sum(attribute='day') + day) }}** | **{{ '%.1f' | format(hist | sum(attribute='night') + night) }}** | **{{ '%.1f' | format(hist | sum(attribute='day') + hist | sum(attribute='night') + day + night) }}** | **{{ '%.2f' | format(hist | sum(attribute='cost') + cost) }}** |{% endif %}
-
-        <sub>Tariffs: day {{ states('input_number.electricity_price_day') }} UAH/kWh, night {{ states('input_number.electricity_price_night') }} UAH/kWh. Past months are recorded at 23:59:30 on the last day of each month.</sub>
+      grid_options:
+        columns: 24
+        rows: auto

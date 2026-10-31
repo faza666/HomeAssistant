@@ -638,6 +638,9 @@ views:
       icon_tap_action:
         action: none
       features_position: bottom
+      grid_options:
+        rows: 1
+        columns: full
     - type: tile
       entity: input_number.electricity_price_night
       name: Нічний Тариф
@@ -652,6 +655,9 @@ views:
       icon_tap_action:
         action: none
       features_position: bottom
+      grid_options:
+        columns: full
+        rows: 1
   - type: grid
     column_span: 2
     cards:

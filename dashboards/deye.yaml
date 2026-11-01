@@ -388,7 +388,7 @@ views:
           name: Load Power
         days_to_show: 1
         period: 5minute
-        chart_type: line
+        chart_type: line-stack
         stat_types:
         - mean
         hide_legend: false
@@ -406,7 +406,7 @@ views:
         - sensor.stuff_room_192_168_0_5_load_l1_current
         days_to_show: 1
         period: 5minute
-        chart_type: line
+        chart_type: line-stack
         stat_types:
         - mean
         hide_legend: false
